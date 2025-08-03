@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Set the deployment name and namespace (if any)
+DEPLOYMENT_NAME="django-messaging-app"
+NAMESPACE="default" # Change this if your deployment is in a different namespace
+
+# Step 1: Scale the deployment to 3 replicas
+echo "Scaling deployment $DEPLOYMENT_NAME to 3 replicas..."
+kubectl scale deployment $DEPLOYMENT_NAME --replicas=3 --namespace=$NAMESPACE
+
+# Step 2: Verify the number of pods running
+echo "Verifying the pods..."
+kubectl get pods --namespace=$NAMESPACE
+
+# Step 3: Perform load testing using wrk (ensure wrk is installed)
+SERVICE_NAME="django-app-service"
+PORT=8000
+
+# Get a pod's name for port-forwarding
+POD_NAME=$(kubectl get pods --namespace=$NAMESPACE -l app=$DEPLOYMENT_NAME -o jsonpath="{.items[0].metadata.name}")
+
+echo "Starting port-forwarding for load testing..."
+kubectl port-forward $POD_NAME 8000:8000 --namespace=$NAMESPACE &
+PORT_FORWARD_PID=$!
+
+sleep 5 # Wait for port-forward to initialize
+
+echo "Running wrk for load testing..."
+wrk -t4 -c100 -d30s http://localhost:8000/
+
+# Stop the port-forward process
+kill $PORT_FORWARD_PID
+
+# Step 4: Monitor resource usage
+echo "Monitoring resource usage..."
+kubectl top pods --namespace=$NAMESPACE

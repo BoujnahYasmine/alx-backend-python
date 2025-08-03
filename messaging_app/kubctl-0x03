@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Step 1: Apply the updated deployment
+echo "Applying blue_deployment.yaml..."
+kubectl apply -f blue_deployment.yaml
+
+# Step 2: Monitor the update progress
+echo "Monitoring rollout status..."
+kubectl rollout status deployment/django-blue
+
+# Step 3: Continuously test the application for downtime
+echo "Testing for downtime..."
+for i in {1..30}; do
+  response=$(curl -s -o /dev/null -w "%{http_code}" http://django-app.com/api/)
+  if [ "$response" -eq 200 ]; then
+    echo "[$i] App is responding correctly (HTTP 200)."
+  else
+    echo "[$i] App is experiencing issues (HTTP $response)."
+  fi
+  sleep 2
+done
+
+# Step 4: Verify the rollout is complete by checking current pods
+echo "Current pods after update:"
+kubectl get pods -l app=django-blue

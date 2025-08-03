@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-messaging-app-blue
+  labels:
+    app: django-app
+    version: blue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django-app
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: django-app
+        version: blue
+    spec:
+      containers:
+        - name: django-app
+          image: temz/alx_msg_app:2.0
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MYSQL_HOST
+              value: ${MYSQL_HOST}
+            - name: MYSQL_DB
+              value: ${MYSQL_DATABASE}
+            - name: MYSQL_USER
+              value: ${MYSQL_USER}
+            - name: MYSQL_PASSWORD
+              value: ${MYSQL_PASSWORD}
+            - name: SECRET_KEY
+              value: ${SECRET_KEY}
+            - name: DEBUG
+              value: ${DEBUG}
+            - name: USE_MYSQL
+              value: ${USE_MYSQL}
+            - name: MYSQL_PORT
+              value: ${MYSQL_PORT}

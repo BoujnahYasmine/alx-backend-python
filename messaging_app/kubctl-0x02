@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Set namespace (optional)
+NAMESPACE="default"
+
+# Deploy Blue Version
+echo "Deploying the Blue Version..."
+kubectl apply -f blue_deployment.yaml -n $NAMESPACE
+kubectl rollout status deployment/django-messaging-app-blue -n $NAMESPACE
+
+# Validate Blue Version
+echo "Checking logs for the Blue Version..."
+kubectl logs -l app=django-app,version=blue -n $NAMESPACE
+
+# Deploy Green Version
+echo "Deploying the Green Version..."
+kubectl apply -f green_deployment.yaml -n $NAMESPACE
+kubectl rollout status deployment/django-messaging-app-green -n $NAMESPACE
+
+# Validate Green Version
+echo "Checking logs for the Green Version..."
+kubectl logs -l app=django-app,version=green -n $NAMESPACE
+
+# Switch Traffic to Green
+echo "Switching traffic to the Green Version..."
+kubectl patch service django-service -n $NAMESPACE \
+  -p '{"spec":{"selector":{"app":"django-app","version":"green"}}}'
+
+echo "Traffic switched to Green Version. Testing..."
+sleep 5
+curl http://django-app.com/api/ && echo ""
+
+# Rollback Option
+#echo "To rollback traffic to the Blue Version, run:"
+#echo "kubectl patch service django-service -n $NAMESPACE -p '{\"spec\":{\"selector\":{\"app\":\"django-app\",\"version\":\"blue\"}}}'"

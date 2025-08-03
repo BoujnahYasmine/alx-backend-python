@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Check if Minikube is installed
+if ! command -v minikube &> /dev/null; then
+    echo "Minikube is not installed. Installing Minikube..."
+    # Download and install Minikube
+    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    sudo mv minikube-linux-amd64 /usr/local/bin/minikube
+    sudo chmod +x /usr/local/bin/minikube
+    echo "Minikube installed successfully!"
+else
+    echo "Minikube is already installed."
+fi
+
+# Start Minikube cluster
+echo "Starting Minikube cluster..."
+minikube start
+
+# Verify that the cluster is running
+echo "Verifying Kubernetes cluster status..."
+kubectl cluster-info
+
+# Retrieve available pods
+echo "Retrieving available pods..."
+kubectl get pods --all-namespaces
+
+# Show Minikube status
+minikube status
